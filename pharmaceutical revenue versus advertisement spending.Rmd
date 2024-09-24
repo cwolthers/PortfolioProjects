@@ -1,0 +1,138 @@
+---
+title: "ANA 605 Final"
+author: "Charlene Wolthers"
+date: "2024-03-01"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+myDataLocation <- "C:/Users/rnehe/Desktop/ANA605/Week4/"
+
+#SET WORKING DIRECTORY TO LOCATION OF DATA FILE
+setwd(myDataLocation)
+
+#IMPORT DATA AND PUT INTO DATAFRAME
+dat <- read.csv(file = "FinalProjectData.csv", header = TRUE)
+fin <- dat
+
+# ========================
+library(supernova)
+library(mosaic)
+library(ggplot2)
+library(ggformula)
+library(ggcorrplot)
+library(dplyr)
+
+```
+
+## Q1
+
+Describe the relationship between advertising and revenue for Dilomatox. Would you characterize these relationships as strong or weak? Support your response with relevant graphs and statistics.
+
+The relationship between Dilomatox advertising and revenue is very strong. Taking a look at the correlation matrix, the correlation between the two is strong as indicated by the a very high 0.9 value. This is again reiterated by performing the cor test. The cor test has a sample estimate of the correlation of 0.8997394. The cor test reveals a t-value of 14.578, indicating that the observed correlation is significantly different from zero. The extremely small p-value (< 2.2e-16) suggests that we can reject the null hypothesis in favor of the null hypothesis that there is a significant correlation between the variables. Furthermore, the calculation of the correlation coefficient (roughly 0.9) is the slope of the standardized regression line. The further away from 0 r is, the stronger the linear relationship between the two variables, as evidenced in the scatter plot. In a scatter plot, the stronger the bivariate relationship, the closer the data points will cluster to the data regression line (the blue line in the scatter plot). The scatter plot below illustrates this point. 
+Overall, the correlation coefficient (0.8997394) and its visualization, indicates a strong positive correlation between Dilomatox advertising and revenue.The t-value and p-value collectively provide evident that there is a significant correlation between the variables. 
+
+```{r echo=FALSE}
+corr_matrix <- cor(fin)
+ggcorrplot(corr_matrix, method = "square", lab = TRUE)
+```
+
+```{r echo=FALSE}
+cor.test(fin$DilomAdv, fin$DilomRev)
+
+gf_point(DilomAdv ~ DilomRev, data = fin) %>%
+gf_labs(title = "Dilomatrox's Revenue and Advertising Spend", x = "Dilomatrox Revenue in millions", y = "Dilomatrox's Advertising Spend in millions") %>%
+gf_lm()
+```
+
+## Q2
+
+Describe the pairwise relationship between advertising and revenue for Zoraffil. Would you characterize these relationships as strong or weak? Support your response with relevant graphs and statistics. Hint: Conduct correlation analysis
+
+The relationship between Zoraffil advertising and revenue is slightly strong. Taking a look at the correlation matrix, the correlation between the two is roughly 0.52. The cor test has a sample estimate of the correlation of 0.5245651. The cor test reveals a t-value of  4.3568, indicating that the observed correlation is a slight departure from zero. The very small p-value (6.555e-05) suggests that we can reject the null hypothesis in favor of the null hypothesis that there is a significant correlation between the variables. Furthermore, the calculation of the correlation coefficient (roughly 0.52) is the slope of the standardized regression line. The scatter plot below illustrates a semi-weak correlation as illustrated by the wide spread of data points around the blue best-fitted regression line. 
+Overall, the correlation coefficient ( 0.5245651) and its visualization, indicates a positive correlation between Zoraffil advertising and revenue.The t-value and p-value collectively provide evident that there is a significant correlation between the variables. 
+
+```{r pressure, echo=FALSE}
+cor.test(fin$ZorAdv, fin$ZorRev)
+
+gf_point(ZorAdv ~ ZorRev, data = fin) %>%
+  gf_labs(title = "Zorafill's Revenue and Advertising Spend", x = "Zorafill Revenue in millions", y = "Zorafill's Advertising Spend in millions") %>%
+gf_lm()
+```
+
+## Q3
+
+Analyze the multivariable relationship between Dilomatox’s revenue and the other variables provided (Dilomatox’s marketing spend, Zoraffil’s revenue, and Zorafill’s marketing spend).  Is there a significant relationship between Dilomatox’s sales and any (or all) of these variables? Support your response with relevant charts or statistics. What percent of the variation in revenue does advertising and marketing spend explain for both brands? Explain. Hint: conduct multiple linear regression and interpret it.
+
+There is a significant relationship between Dilomatox's revenue and its advertising expenditures. The analysis, utilizing a linear model (denoted as d_model), which predicts Dilomatox's revenue (DilomRev) from its advertising spend (DilomAdv), indicates a Proportion of Explained Variance (PRE) of 0.8095. This suggests that Dilomatox's advertising spend accounts for approximately 81% of the variation observed in its revenue. The strength of this relationship is further corroborated by the ANOVA table's F Ratio of 212.510, implying that the d_model explains the variance in DilomRev significantly better (213 times better) than an empty model (one that includes no predictors). The extremely low p-value, essentially zero, allows us to confidently reject the null hypothesis that advertising has no impact on revenue. This confirms a significant relationship between Dilomatox's revenue and its advertising spend.
+In contrast, when exploring Zoraffil's revenue in relation to its marketing expenses through another linear model (z_model), the findings are markedly different. The PRE for the z_model stands at 0.2752, indicating that Zoraffil's advertising and marketing expenditures explain only 28% of the variation in its revenue. This model's F Ratio, at 18.982, is significantly lower than that of the d_model, highlighting a less pronounced explanation of revenue variance compared to Dilomatox.
+The comparative analysis between Dilomatox and Zoraffil underscores the differential impact of advertising and marketing spend on each company's revenue. For Dilomatox, the substantial portion of revenue variance explained by advertising spend (81%) contrasts with the more modest explanation (28%) for Zoraffil. These differences can be visualized through scatter plots of revenue against advertising spend for each company (as illustrated above), alongside regression lines to depict the strength and direction of the relationship. Additionally, the bar chart below shows the F Ratios and PREs for each model to effectively illustrate the comparative analysis.
+
+```{r include=FALSE}
+f_ratio_d_model <- 212.510
+pre_d_model <- 0.8095
+f_ratio_z_model <- 18.982
+pre_z_model <- 0.2752
+
+data <- data.frame(
+  Model = c("Dilomatox", "Dilomatox", "Zoraffil", "Zoraffil"),
+  Metric = c("F Ratio", "PRE", "F Ratio", "PRE"),
+  Value = c(f_ratio_d_model, pre_d_model, f_ratio_z_model, pre_z_model)
+)
+
+z_model <- lm(ZorRev ~ ZorAdv, data = fin)
+
+d_model <- lm(DilomRev ~ DilomAdv, data = fin)
+```
+
+```{r echo=FALSE}
+ggplot(data, aes(fill = Metric, y = Value, x = Model)) + 
+  geom_bar(position = "dodge", stat = "identity") +
+  theme_minimal() +
+  labs(title = "Comparison of F Ratios and PREs",
+       y = "Value",
+       x = "") +
+  scale_fill_brewer(palette = "Pastel1", name = "Metric") +
+  geom_text(aes(label = round(Value, 2)), position = position_dodge(width = 0.9), vjust = -0.5)
+
+supernova(z_model)
+
+supernova(d_model)
+```
+
+## Q4
+
+```{r include=FALSE}
+ci <- predict(d_model, newdata = data.frame(DilomAdv = (64.25 - 11)), interval = "confidence")
+```
+
+```{r echo=FALSE}
+confint(d_model)
+print(d_model)
+print(ci)
+lowerMarketSpendRatio <- ((64.25 - 11) / ci[2]) * 100 #ci[2] = ValueLower
+upperMarketSpendRatio <- ((64.25 - 11) / ci[3]) * 100 #ci[3] = ValueUpper
+```
+
+What impact will the CFO’s proposed $11 million dollar cut to your budget have on Dilomatox revenue next year? Hint: interpret the regression coefficients.
+
+According to the d_model, based on our current forecast, the intercept of our model (b_0) represents the predicted value of DilomRev when the DilomAdv is 0. So in this case, our revenue is 0.7432 ($743,200) when DilomAdv is 0. The b_1 (17.9382) tells us that for each one-point increase in DilomAdv, the DilomRev is predicted to increase by 17.9382 units. Our current forecast this year for advertising and marketing spend (total) is $56,860,000 and our product revenue is $1,058,610,000.
+
+The 95% confidence intervals (CIs) for the intercept and the coefficient of DilomAdv in the linear regression model (d_model) provide insights into the estimated range within which the true values of these parameters are likely to lie, with 95% confidence. The CI for the intercept ranges from -1.970313 to 3.45671. The intercept represents the expected value of DilomRev (Dilomatox's revenue) when DilomAdv (Dilomatox's advertising spend) is 0. The fact that the CI for the intercept includes both negative and positive values suggests uncertainty about the exact effect of having no advertising spend on revenue. It indicates that if DilomAdv were 0, DilomRev could potentially decrease (if the true intercept were negative), stay roughly unchanged (if the true intercept were close to 0), or increase (if the true intercept were positive), though the idea of revenue increasing without any advertising spend is counterintuitive and likely indicates other factors at play.
+The CI for the coefficient of DilomAdv ranges from 15.466588 to 20.40973. This coefficient measures the expected change in DilomRev for a one-unit increase in DilomAdv, holding all other factors constant. The positive range of the CI indicates a positive relationship between DilomAdv and DilomRev; as advertising spend increases, revenue is expected to increase. The CI does not cross 0, reinforcing the significance of this positive relationship.
+The fact that the CI for DilomAdv is entirely above 0 strongly suggests a significant positive relationship between advertising spend and revenue. This means we can be confident that increasing advertising spend will, on average, increase Dilomatox's revenue. Furthermore, the CIs provide a measure of the reliability of the model's estimates. Since neither CI crosses the boundary of significance for their respective parameters (e.g., the CI for DilomAdv does not include 0), it reinforces the model's findings regarding the impact of advertising on revenue.
+
+I also created a linear regression model predicting DilomRev (Dilomatox's revenue) based on DilomAdv (Dilomatox's advertising spend) after the 11,000,000-budget cut. This prediction was made for a new data point where DilomAdv is set to 53.2553.25. This represents our potential scenario where the advertising budget is reduced by 11 units from 64.25 units ( the proposed budget) to 53.25 units. The fit value 955.9501955.9501 represents the predicted value of DilomRev (Dilomatox's revenue) when DilomAdv is 53.25 The lwr value 827.0413827.0413 indicates the lower bound of the 95% confidence interval for the predicted revenue. This means that, according to the model and under the assumption of normality of residuals, there is a 95% chance that the true value of DilomRev for DilomAdv at 53.2553.25 is higher than 827.0413827.0413. Similarly, the value 1084.8591084.859 is the upper bound of the 95% confidence interval for the predicted revenue. This suggests that there is a 95% confidence that the true value of DilomRev for DilomAdv at 53.25 is less than 1084.8591084.859.
+Additionally, I incorporated the calculation of the marketing spend as a percentage of revenue, based on the lower and upper bounds of the confidence interval (CI) for the predicted revenue after a proposed $11 million cut from an initial $64.25 million advertising budget to strengthen the argument against the budget reduction. The lower market spend ratio calculation uses the lower bound of the predicted revenue (ci[2] = ValueLower) to assess how the adjusted marketing budget (after the $11 million reduction) constitutes a percentage of what is essentially a conservative revenue estimate.  Conversely, the upper market spend ratio calculation applies the upper bound of the predicted revenue (ci[3] = ValueUpper) for the same purpose. The increase to 6.4% from the pre-cut level of approximately 5.37% suggests that, at the conservative end of revenue predictions (lower bound of the CI), the marketing spend becomes a larger portion of the revenue. This indicates that if revenues fall towards the lower end of the model's predictions, the company will actually be spending a higher percentage of its revenue on marketing than before the budget cut. In a scenario where revenues are lower than expected, this increased percentage could strain the company's financial resources, indicating that the budget cut might make the company's operations less efficient by forcing it to allocate a larger share of its revenue to sustain marketing efforts.
+
+## Q5
+
+Summary: Your managerial summary should include a description of the statistical tests or processes used to answer each question, explanation of the necessary results (appropriate descriptive or graphical summaries, statistics like r-values and least-squares regression equations, predicted values -- and if appropriate estimates of error for any parameters or predictions made). It should also show that any required assumptions for any statistical procedures used are valid.  Use a 95% level of significance for any statistical tests.
+
+The analysis demonstrates a compelling case for the relationship between advertising expenditure and revenue for Dilomatox, contrasted with a more modest correlation for Zoraffil. For Dilomatox, the evidence is robust, showcasing a strong positive correlation of approximately 0.9 between advertising spend and revenue, as confirmed by both correlation analysis and a cor test, which presents a significant t-value of 14.578 and an extremely small p-value (< 2.2e-16). This statistical significance underscores the likelihood that advertising spend is a crucial driver of revenue for Dilomatox, with the advertising explaining about 81% of the variance in revenue as indicated by a Proportion of Explained Variance (PRE) of 0.8095. The relationship's strength is visually supported by scatter plots, where a closer clustering of data points around the regression line signifies a stronger linear relationship.
+In contrast, Zoraffil's correlation between advertising spend and revenue is positive but moderate, with a correlation coefficient of roughly 0.52. This is indicative of a significant yet less pronounced relationship, as evidenced by a lower t-value of 4.3568 and a p-value of 6.555e-05, suggesting a slight but significant correlation. This relationship explains only 28% of the variance in revenue for Zoraffil, a stark difference from Dilomatox's 81%.
+The 95% confidence interval (CI) for the d_model intercept, ranging from -1.970313 to 3.45671, suggests uncertainty about the impact of zero advertising spend on Dilomatox's revenue, indicating that revenue could potentially decrease, remain unchanged, or even increase in the absence of advertising. This ambiguity underscores the influence of other factors beyond advertising on revenue generation, pointing to a possible baseline revenue or the impact of unaccounted variables. Conversely, the strictly positive CI for the coefficient of DilomAdv (15.466588 to 20.40973) underscores a definitive positive relationship between advertising spend and revenue. The exclusion of zero from this interval highlights the statistical significance of this relationship, confirming that increases in DilomAdv reliably lead to revenue growth. This evidence firmly supports the effectiveness of advertising in boosting revenue, providing a strong basis for informed advertising budget decisions
+The implications of these findings are profound, especially in light of a proposed $11 million budget cut in Dilomatox's advertising. A linear regression model, after accounting for this budget reduction, predicts Dilomatox's revenue to be approximately $955.95 million, within a 95% confidence interval ranging from $827.04 million to $1084.86 million. This prediction, alongside the calculated marketing spend ratios post-cut (increasing to 6.4% from a pre-cut level of approximately 5.37% at the lower revenue bound), signals a potential inefficiency. The budget cut could lead Dilomatox to allocate a larger portion of its revenue towards marketing efforts, especially if revenues fall towards the lower end of predictions, suggesting a counterproductive impact on financial efficiency.
+In summary, while the strong correlation between advertising spend and revenue for Dilomatox argues against the proposed budget cut, the nuanced understanding of these relationships—bolstered by statistical evidence—highlights the strategic importance of maintaining, if not increasing, advertising budgets to support revenue growth. The analysis, grounded in solid statistical methodologies and visualizations, provides a clear, data-driven argument against the reduction, emphasizing the potential risks to operational efficiency and revenue generation.
